@@ -1,8 +1,7 @@
 def main():
     valid_passwords = 0
     with open('input.txt', 'r') as input_file:
-        data = input_file.readlines()
-        for line in data:
+        for line in input_file:
             segments = line.split()
             min_max = segments[0].split('-')
             
