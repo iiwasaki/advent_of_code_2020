@@ -63,8 +63,12 @@ def find_inf_loop(instruction_list, jumpnop_list):
     # Makes the first attempt to change an instruction. Assumes
     # that jumpnop_list is nonempty.
     modified_instructions = instruction_list
+
+    # Do a pop() here so that we start from the last jump/nops done
+    # instead of the first. Improves the brute forcing a little bit.
     first_change = jumpnop_list.pop()
     amount = modified_instructions[first_change][1]
+
     # Do the switch between nop and jump
     if modified_instructions[first_change][0] == "nop":
         modified_instructions[first_change] = ("jmp", amount)
