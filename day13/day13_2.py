@@ -34,7 +34,7 @@ def matching_offsets(id_list):
             if (time + index) % id_list[index] == 0:
                 increment *= id_list[index]
                 break
-    print (time)
+    return time
 
 
 def parse_input():
