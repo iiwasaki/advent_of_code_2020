@@ -1,3 +1,9 @@
+"""
+Creates a stitched image and counts how many "sea monsters" there are.
+Oh my gosh this was so hard.... >_<
+Apologies for the sloppy code and lack of documentation.
+"""
+
 from math import sqrt
 from copy import deepcopy
 
@@ -107,132 +113,6 @@ def parse_input():
                 tile_grid.append(line)
 
     return tile_set
-
-def find_match(tile, tileset):
-    find_right(tile, tileset)
-    find_left(tile, tileset)
-    find_top(tile, tileset)
-    find_bottom(tile, tileset)
-
-def find_right(tile, tileset):
-    if tile.right_con:
-        return
-    match_right(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_right(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_right(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_right(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_right(tile, tileset)
-
-def find_top(tile, tileset):
-    if tile.top_con:
-        return
-    match_top(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_top(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_top(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_top(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_top(tile, tileset)
-
-def find_bottom(tile, tileset):
-    if tile.bottom_con:
-        return
-    match_bottom(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_bottom(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_bottom(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_bottom(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_bottom(tile, tileset)
-
-def find_left(tile, tileset):
-    if tile.left_con:
-        return
-    match_left(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_left(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_left(tile, tileset)
-    if not tile.locked:
-        tile.rotate()
-        match_left(tile, tileset)
-    if not tile.locked:
-        tile.flip()
-        match_left(tile, tileset)
-
-def match_right(tile, tileset):
-    for target in tileset:
-        if target.left == tile.right:
-            if target.left_con:
-                print ("Already have left con?")
-                return
-            else:
-                tile.right_con = target
-                target.left_con = tile
-                tile.locked = True
-                target.locked = True
-                return
-
-def match_left(tile, tileset):
-    for target in tileset:
-        if target.right == tile.left:
-            if target.right_con:
-                print ("Already have right con?")
-                return
-            else:
-                tile.left_con = target
-                target.right_con = tile
-                tile.locked = True
-                target.locked = True
-                return
-
-def match_top(tile, tileset):
-    for target in tileset:
-        if target.bottom == tile.top:
-            if target.bottom_con:
-                print ("Already have down con?")
-                return
-            else:
-                tile.top_con = target
-                target.bottom_con = tile
-                tile.locked = True
-                target.locked = True
-                return
-
-def match_bottom(tile, tileset):
-    for target in tileset:
-        if target.top == tile.bottom:
-            if target.top_con:
-                print ("Already have up con?")
-                return
-            else:
-                tile.bottom_con = target
-                target.top_con = tile
-                tile.locked = True
-                target.locked = True
-                return
 
 def resolve_tiles(tileset):
     print ("Creating square...")
@@ -377,6 +257,20 @@ def find_sea_monster(picture_list):
 
     return monsters
 
+def process_for_monsters(picture):
+    for _ in range(0, 4):
+        picture = rotate_picture(picture)
+        monsters = find_sea_monster(picture)
+        if monsters > 0:
+            return monsters
+        picture = flip_picture(picture)
+        monsters = find_sea_monster(picture)
+        if monsters > 0:
+            return monsters
+        picture = flip_picture(picture)
+
+    return -1 # Error?
+
 def rotate_picture(picture):
     new_grid = []
     for index in range(0, len(picture)):
@@ -418,13 +312,6 @@ if __name__ == "__main__":
     print (f"Product of corners is {product}")
     sidelen = int(sqrt(len(square)))
     picture = combine_image(square)
-    for _ in range(0, 4):
-        picture = rotate_picture(picture)
-        monsters = find_sea_monster(picture)
-        print (monsters)
-        picture = flip_picture(picture)
-        monsters = find_sea_monster(picture)
-        print (monsters)
-        picture = flip_picture(picture)
+    num_monsters = process_for_monsters(picture)
     num_sharps = count_sharps(picture)
-    print(num_sharps - (16 * 15))
+    print(num_sharps - (num_monsters * 15))
