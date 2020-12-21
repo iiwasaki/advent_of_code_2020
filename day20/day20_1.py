@@ -87,7 +87,7 @@ class Tile:
 
 def parse_input():
     tile_set = set()
-    with open("test.txt", "r") as input_file:
+    with open("input.txt", "r") as input_file:
         tile_id = -1
         tile_grid = []
         for line in input_file:
@@ -332,7 +332,6 @@ def create_square(topleft, tileset):
 def combine_image(square):
     picture_list = []
     process_borders(square)
-    sidelen = int(sqrt(len(square)))
     string = ""
     string = string + (square[0][0].top)
     string = string + (square[0][1].top)
@@ -352,12 +351,60 @@ def print_image(picture_list):
     for line in picture_list:
         print(line)
 
+def find_sea_monster(picture_list):
+    first_row = [-18, -13, -12, -7, -6, -1, 0, 1]
+    second_row = [-17, -14, -11, -8, -5, -2]
+    num_lines = len(picture_list)
+    monsters = 0
+    for line_ix in range(0, num_lines-2):
+        line = picture_list[line_ix]
+        line_max = len(line)
+        for index in range (17, line_max):
+            if line[index] == "#":
+                monster = True
+                for num in first_row:
+                    if not picture_list[line_ix+1][num + index] == "#":
+                        monster = False
+                        break
+                if not monster:
+                    continue
+                for num in second_row:
+                    if not picture_list[line_ix+2][num + index] == "#":
+                        monster = False
+                        break
+                if monster:
+                    monsters += 1
 
+    return monsters
+
+def rotate_picture(picture):
+    new_grid = []
+    for index in range(0, len(picture)):
+        new_line = ""
+        for line in picture:
+            new_line = line[index] + new_line
+        new_grid.append(new_line)
+    return new_grid
+
+def flip_picture(picture):
+    new_grid = []
+    for line in picture:
+        new_grid.insert(0, line)
+    return new_grid
 
 def process_borders(square):
     for line in square:
         for tile in line:
             tile.strip_borders()
+
+def count_sharps(picture):
+    sharps = 0
+    for line in picture:
+        for char in line:
+            if char == "#":
+                sharps += 1
+
+    return sharps
 
 
 if __name__ == "__main__":
@@ -371,4 +418,13 @@ if __name__ == "__main__":
     print (f"Product of corners is {product}")
     sidelen = int(sqrt(len(square)))
     picture = combine_image(square)
-    print_image(picture)
+    for _ in range(0, 4):
+        picture = rotate_picture(picture)
+        monsters = find_sea_monster(picture)
+        print (monsters)
+        picture = flip_picture(picture)
+        monsters = find_sea_monster(picture)
+        print (monsters)
+        picture = flip_picture(picture)
+    num_sharps = count_sharps(picture)
+    print(num_sharps - (16 * 15))
