@@ -43,6 +43,15 @@ class Tile:
             new_grid.insert(0, line)
         self.define_grid(new_grid)
 
+    def strip_borders(self):
+        new_grid = []
+        for line in self.grid:
+            new_line = line[1:len(line)-1]
+            new_grid.append(new_line)
+        new_grid = new_grid[1:len(new_grid) - 1]
+        self.define_grid(new_grid)
+
+
     def print_tile(self):
         print(f"Tile ID: {self.id}")
         for line in self.grid:
@@ -78,7 +87,7 @@ class Tile:
 
 def parse_input():
     tile_set = set()
-    with open("input.txt", "r") as input_file:
+    with open("test.txt", "r") as input_file:
         tile_id = -1
         tile_grid = []
         for line in input_file:
@@ -229,21 +238,27 @@ def resolve_tiles(tileset):
     print ("Creating square...")
     for tile in tileset:
         print(f"Checking square starting at tile ID {tile.id}")
-        return_sq = create_square(tile, tileset)
-        if return_sq:
-            return return_sq
-        tile.rotate()
-        return_sq = create_square(tile, tileset)
-        if return_sq:
-            return return_sq
-        tile.flip()
-        return_sq = create_square(tile, tileset)
-        if return_sq:
-            return return_sq
-        tile.rotate()
-        return_sq = create_square(tile, tileset)
-        if return_sq:
-            return return_sq
+        for _ in range(0, 4):
+            return_sq = create_square(tile, tileset)
+            if return_sq:
+                return return_sq
+            tile.flip()
+            reset_tiles(tileset)
+            return_sq = create_square(tile, tileset)
+            if return_sq:
+                return return_sq
+            tile.flip()
+            tile.rotate()
+            reset_tiles(tileset)
+
+    return None
+
+def reset_tiles(tileset):
+    for tile in tileset:
+        tile.top_con = None
+        tile.bottom_con = None
+        tile.left_con = None
+        tile.right_con = None
 
 def create_square(topleft, tileset):
     sidelen = int(sqrt(len(tileset)))
@@ -260,6 +275,8 @@ def create_square(topleft, tileset):
                 curr = square[side_index][0]
                 for _ in range(0, 4):
                     if curr.bottom == tile.top:
+                        curr.bottom_con = tile
+                        tile.top_con = curr
                         side_index += 1
                         square.append([tile])
                         square_ids.add(tile.id)
@@ -267,6 +284,8 @@ def create_square(topleft, tileset):
                         break
                     tile.flip()
                     if curr.bottom == tile.top:
+                        curr.bottom_con = tile
+                        tile.top_con = curr
                         side_index += 1
                         square.append([tile])
                         square_ids.add(tile.id)
@@ -277,18 +296,27 @@ def create_square(topleft, tileset):
             else:
                 # Look right
                 curr = square[side_index][len(square[side_index]) - 1]
-                #print(f"Checking right {curr.id} vs {tile.id}")
                 for _ in range(0, 4):
                     if curr.right == tile.left:
-                        #print(f"Found match right: {curr.id} right is {tile.id}")
                         square[side_index].append(tile)
+                        curr.right_con = tile
+                        tile.left_con = curr
+                        if side_index > 0:
+                            current_index = len(square[side_index])
+                            tile.top_con = square[side_index-1][current_index - 1]
+                            square[side_index-1][current_index - 1].bottom_con = tile
                         square_ids.add(tile.id)
                         found = True
                         break
                     tile.flip()
                     if curr.right == tile.left:
-                        #print(f"Found match right: {curr.id} right is {tile.id}")
+                        curr.right_con = tile
+                        tile.left_con = curr
                         square[side_index].append(tile)
+                        if side_index > 0:
+                            current_index = len(square[side_index])
+                            tile.top_con = square[side_index-1][current_index - 1]
+                            square[side_index-1][current_index - 1].bottom_con = tile
                         square_ids.add(tile.id)
                         found = True
                         break
@@ -303,18 +331,38 @@ def create_square(topleft, tileset):
 
 def combine_image(square):
     picture_list = []
+    process_borders(square)
     sidelen = int(sqrt(len(square)))
-    for index in range (0, sidelen):
-        pass
+    string = ""
+    string = string + (square[0][0].top)
+    string = string + (square[0][1].top)
+    string = string + (square[0][2].top)
+    square_len = len(square)
+    inner_sq_len = len(square[0])
+    grid_len = len(square[0][0].grid)
+    for sq_index in range(0, square_len):
+        for grid_ix in range(0, grid_len):
+            line = ""
+            for in_sq_ix in range(0, inner_sq_len):
+                line = line + square[sq_index][in_sq_ix].grid[grid_ix]
+            picture_list.append(line)
+    return (picture_list)
 
-def strip_corners
+def print_image(picture_list):
+    for line in picture_list:
+        print(line)
+
+
+
+def process_borders(square):
+    for line in square:
+        for tile in line:
+            tile.strip_borders()
+
 
 if __name__ == "__main__":
     tile_set = parse_input()
     square = resolve_tiles(tile_set)
-    for line in square:
-        for tile in line:
-            print(tile.id)
     topleft = square[0][0].id
     topright = square[0][len(square[0]) - 1].id
     bottomleft = square[len(square) - 1][0].id
@@ -322,3 +370,5 @@ if __name__ == "__main__":
     product = bottomright * bottomleft * topleft * topright
     print (f"Product of corners is {product}")
     sidelen = int(sqrt(len(square)))
+    picture = combine_image(square)
+    print_image(picture)
