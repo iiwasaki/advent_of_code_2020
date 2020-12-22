@@ -42,9 +42,8 @@ def recursive_combat (p1_deck, p2_deck):
     round = 1
     configs_played = set()
     while len(p1_deck) > 0 and len(p2_deck) > 0:
-        current_config = deck_to_string(p1_deck) + deck_to_string(p2_deck)
+        current_config = (deck_to_string(p1_deck) + "|" + deck_to_string(p2_deck))
         if current_config in configs_played:
-            print ("HAHAHAHAHA INFINITE")
             return "player1"
         configs_played.add(current_config)
         #print(f"-- Round {round} --")
@@ -56,8 +55,8 @@ def recursive_combat (p1_deck, p2_deck):
         #print(f"P2 plays: {p2_card}")
         if len(p1_deck) >= p1_card and len(p2_deck) >= p2_card:
             # Go into the sub-game
-            p1_copy = p1_deck.copy()
-            p2_copy = p2_deck.copy()
+            p1_copy = p1_deck.copy()[:p1_card]
+            p2_copy = p2_deck.copy()[:p2_card]
             winner = recursive_combat(p1_copy, p2_copy)
             if winner == "player1":
                 #print("Player 1 wins the round!")
@@ -81,7 +80,7 @@ def recursive_combat (p1_deck, p2_deck):
                 p2_deck.append(p2_card)
                 p2_deck.append(p1_card)
         round += 1
-        #print()
+    #print()
     #print("== Post-game results ==")
     #print(f"Player 1's deck: {p1_deck}")
     #print(f"Player 2's deck: {p2_deck}")
@@ -105,6 +104,9 @@ def calculate_score(deck):
     return score
 
 def deck_to_string(deck):
+    """
+    Stringifies a deck.
+    """
     string = ""
     for card in deck:
         string = string + str(card)
@@ -116,6 +118,8 @@ if __name__ == "__main__":
     p1_deck, p2_deck = process_input()
     winner = recursive_combat (p1_deck, p2_deck)
     score = -1
+    print(p1_deck)
+    print(p2_deck)
     if winner == "player1":
         print("Winner: Player 1")
         score = calculate_score(p1_deck)
