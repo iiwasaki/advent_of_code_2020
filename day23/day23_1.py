@@ -1,5 +1,8 @@
 """
 Play Crab Cups.
+Note: This is a super inefficient implementation using lists. Please
+look at day23_2.py for a much better implementation using linked lists and
+a dictioanry.
 """
 
 def parse_input(in_string):

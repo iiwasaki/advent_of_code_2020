@@ -2,95 +2,111 @@
 Crab Cups but with 1 million entries and 10 million moves.
 Oh boy...
 """
+class Cup:
+    def __init__(self, val):
+        self.val = val
+        self.next = None
+
+    def set_next(self, next_cup):
+        self.next = next_cup
+
 def parse_input(in_string):
     """
-    Takes in input string and returns it in list form of integers.
+    Takes in input string and creates a cup object for each cup.
+    Returns a dictionary that maps a label to a particular cup.
     """
-    integer_list = []
+    cup_dict = {}
     max_num = -1
+    last_cup = None
+    first_cup = None
     for char in in_string:
-        integer_list.append(int(char))
+        cup = Cup(int(char))
+        if not first_cup:
+            first_cup = cup
+        if last_cup:
+            last_cup.set_next(cup)
+        cup_dict[int(char)] = cup
+        last_cup = cup
         max_num = max(max_num, int(char))
     for num in range (max_num + 1, 1000001):
-        integer_list.append(num)
+        cup = Cup(num)
+        last_cup.set_next(cup)
+        cup_dict[num] = cup
+        last_cup = cup
+    last_cup.set_next(first_cup)
 
-    return integer_list
+    return cup_dict
 
-def crab_cups(cups, round_lim):
+def crab_cups(cups, start_label, num_rounds):
     """
-    Given a list of integers as cup labels, play Crab Cups for
-    x number of rounds, where x is the supplied round limit.
+    Given a starting cup label, play the cup game for the
+    given number of rounds. Now improved to use a linked list with a
+    dictionary, not just a list!
     """
-    tuple_set = set()
-    current = 0
-    for round in range (1, round_lim + 1):
+    current_cup = cups[start_label]
+    for round in range(1, num_rounds + 1):
         #print(f"-- Move {round} --")
-        #print(f"Cups: {cups}")
-        current_val = cups[current]
-        #print(f"Current cup: {current_val}")
-        cw_one = cups.pop(clockwise_index(cups, cups.index(current_val), 1))
-        cw_two = cups.pop(clockwise_index(cups, cups.index(current_val), 1))
-        cw_three = cups.pop(clockwise_index(cups, cups.index(current_val), 1))
-        #print (f"Pick up: {cw_one}, {cw_two}, {cw_three}")
-        destination = find_destination(cups, current_val)
-        #print (f"Destination: {cups[destination]}\n")
-        cups.insert(destination + 1, cw_one)
-        cups.insert(destination + 2, cw_two)
-        cups.insert(destination + 3, cw_three)
-        current = clockwise_index(cups, cups.index(current_val), 1)
-        cup_tup = tuple(cups)
-        if cup_tup in tuple_set:
-            print ("Repeat found!")
-        tuple_set.add(cup_tup)
+        #print_cups(cups, 3)
+        pick_ups = (current_cup.next,
+                    current_cup.next.next,
+                    current_cup.next.next.next)
+        destination = find_destination(cups, current_cup, pick_ups)
+        #print(f"Get:{pick_ups[0].val}, {pick_ups[1].val}, {pick_ups[2].val}")
+        #print(f"Destination: {destination.val}\n")
+        current_cup.next = pick_ups[2].next
+        pick_ups[2].next = destination.next
+        destination.next = pick_ups[0]
+        current_cup = current_cup.next
 
     return cups
 
-def prep_return(cups):
-    """
-    Given a list of cups, return a string with all the numbers
-    after the "1" in the cups list concatenated together.
-    """
-    cup_len = len(cups)
-    index = (cups.index(1) + 1) % cup_len
-    return_str = ""
-    for _ in range (0, cup_len - 1):
-        return_str += str(cups[index])
-        index = (index + 1) % cup_len
 
-    return return_str
-
-def find_destination(cups, current_label):
+def find_destination(cup_dict, current, picked_up):
     """
-    Given the index of the current cup, find the destination cup for
-    the Crab Game. The destination is the cup that has the current cup
-    label minus one, or, if that is not found, the largest cup.
+    Find the "destination" cup given the current cup we are on.
+    Destination will be current cup label - 1 unless that cannot be found
+    (as in it has been picked up, or does not exist for some other reason).
+    Then it will subtract 1 until wrapping around to the top value.
+    Returns destination cup.
     """
-    target = current_label - 1
-    largest_num = max(cups)
-    smallest_num = min(cups)
+    target_label = current.val - 1
     while True:
-        if target in cups:
-            return cups.index(target)
-        target -= 1
-        if target < smallest_num:
-            target = largest_num
+        if target_label in cup_dict:
+            target_cup = cup_dict[target_label]
+            if not target_cup in picked_up:
+                return target_cup
+            target_label -= 1
+        else:
+            target_label = len(cup_dict)
 
-    return -1 # Should never be here
 
-
-def clockwise_index(cups, current_ix, num_clockwise):
+def print_cups(cup_dict, start_label):
     """
-    Given a list of cup labels and a number of times to move clockwise,
-    return the index for the cup that is {num_clockwise} to the right of
-    the current index.
+    Given a starting label, print out the cups in order starting at the
+    start label cup. Assumes start label will always be valid.
     """
+    start_cup = cup_dict[start_label]
+    cup_str = ""
+    for _ in range (0, len(cup_dict)):
+        cup_str += str(start_cup.val)
+        start_cup = start_cup.next
 
-    return (current_ix + num_clockwise) % len(cups)
+    print (f"Cups: {cup_str}")
+
+def two_after(cup_dict, start_label):
+    """
+    Returns the two cups that come after the target cup.
+    For the solution, target cup will be "1". Assumes start_label
+    will always be valid.
+    """
+    target_cup = cup_dict[start_label]
+
+    return target_cup.next.val, target_cup.next.next.val
 
 if __name__ == "__main__":
-    int_list = parse_input("389125467")
-    print(len(int_list))
-    new_cups = crab_cups(int_list, 10000)
-    print(f"Final cups: {len(new_cups)}")
-    #to_print = prep_return(new_cups)
-    #print(f"Final string: {to_print}")
+    cup_dict = parse_input("871369452")
+    cup_dict = crab_cups(cup_dict, 8, 10000000)
+    ans_one, ans_two = two_after(cup_dict, 1)
+    print (ans_one)
+    print (ans_two)
+    print (ans_one * ans_two)
