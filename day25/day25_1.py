@@ -27,6 +27,10 @@ def loop_num(card_pub, door_pub):
     return ("door", loop_count)
 
 def transform_num(subject, loop_count):
+    """
+    Run the number transform function for a loop_count
+    number of times.
+    """
     value = 1
     for _ in range (0, loop_count):
         value = value * subject
